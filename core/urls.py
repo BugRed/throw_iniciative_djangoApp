@@ -1,13 +1,25 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
+    # Admin
     path('admin/', admin.site.urls),
-    path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/', include('accounts.urls')),
-    path('api/characters/', include('characters.urls')),
-    path('api/rooms/', include('rooms.urls')),
-    path('api/initiative/', include('initiative.urls')),
+    
+    # Página inicial → Login
+    path('', RedirectView.as_view(pattern_name='login'), name='home'),
+    
+    # API Authentication (JWT)
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    # API REST v1
+    path('api/v1/auth/', include('accounts.urls_api')),
+    path('api/v1/characters/', include('characters.urls')),
+    path('api/v1/rooms/', include('rooms.urls')),
+    path('api/v1/initiative/', include('initiative.urls')),
+    
+    # Templates HTML
+    path('', include('accounts.urls_templates')),
 ]
