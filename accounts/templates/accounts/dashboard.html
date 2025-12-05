@@ -45,16 +45,24 @@
                 </div>
             </div>
             
-            <div class="flex space-x-4">
+           <div class="flex space-x-4">
                 <a href="{% url 'logout' %}" 
                    class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">
                     <i class="fas fa-sign-out-alt mr-2"></i>Sair
                 </a>
                 
-                {% if is_master %}
-                <button class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                {% if user.user_type == 'master' %}
+                
+                <a href="{% url 'room-list-template' %}" 
+                   class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    <i class="fas fa-dungeon mr-2"></i>Gerenciar Salas
+                </a>
+                
+                <a href="{% url 'user-list' %}" 
+                   class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     <i class="fas fa-users-cog mr-2"></i>Gerenciar Usuários
-                </button>
+                </a>
+                
                 {% endif %}
             </div>
         </div>

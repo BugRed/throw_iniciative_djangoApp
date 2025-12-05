@@ -1,4 +1,3 @@
-# accounts/views.py - VERSÃO COMPLETA
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -12,8 +11,14 @@ from .serializers import (
     UserUpdateSerializer,
     PasswordChangeSerializer
 )
-from django.contrib.auth import authenticate, login  
-from django.contrib import messages 
+from django.views.generic import (
+    ListView, CreateView, DetailView, UpdateView, DeleteView
+)
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
+from django.utils import timezone
+
+
 User = get_user_model()
 
 # ==================== VIEWS BASEADAS EM CLASSE ====================
@@ -181,9 +186,7 @@ def user_stats(request):
     """
     Estatísticas do usuário
     GET /api/auth/stats/
-    """
-    from django.utils import timezone
-    
+    """    
     user = request.user
     
     try:
@@ -214,7 +217,56 @@ def user_stats(request):
     
     return Response(stats)
 
-# ==================== VIEWS DE TEMPLATES (HTML) - VERSÃO CORRIGIDA ====================
+# ==================== VIEWS DE TEMPLATES (HTML) - CRUD ADMINISTRATIVO ====================
+
+# Mixin para garantir que apenas Mestres (master) acessem
+class MasterRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    def test_func(self):
+        # Acesso apenas para mestres
+        return self.request.user.user_type == 'master'
+
+# 1. Listagem de Usuários (URL: user-list)
+class UserListView(MasterRequiredMixin, ListView):
+    model = User
+    template_name = 'accounts/user_list.html' # Template a ser criado
+    context_object_name = 'users'
+    paginate_by = 20
+    
+    # Filtra os superusuários por último na lista
+    def get_queryset(self):
+        # Garante que superusuários sejam listados por último ou primeiro
+        return User.objects.all().order_by('-is_superuser', 'username')
+
+# 2. Detalhes do Usuário (URL: user-detail)
+class UserDetailView(MasterRequiredMixin, DetailView):
+    model = User
+    template_name = 'accounts/user_detail.html' # Template a ser criado
+    context_object_name = 'target_user'
+    
+    # Permite que o próprio usuário veja seu perfil
+    def test_func(self):
+        return self.request.user.user_type == 'master' or self.get_object() == self.request.user
+
+# 3. Atualização de Usuário (URL: user-update)
+class UserUpdateView(MasterRequiredMixin, UpdateView):
+    model = User
+    # Campos que o mestre pode editar (adapte conforme seu modelo)
+    fields = ['username', 'email', 'user_type', 'bio', 'is_active', 'is_staff']
+    template_name = 'accounts/user_form.html' # Template a ser criado
+    context_object_name = 'target_user'
+    
+    def get_success_url(self):
+        return reverse_lazy('user-detail', kwargs={'pk': self.object.pk})
+
+# 4. Deleção de Usuário (URL: user-delete)
+class UserDeleteView(MasterRequiredMixin, DeleteView):
+    model = User
+    template_name = 'accounts/user_confirm_delete.html' # Template a ser criado
+    success_url = reverse_lazy('user-list')
+
+
+
+# ==================== VIEWS DE TEMPLATES (HTML) - AUTENTICAÇÃO E DASHBOARD ====================
 
 def login_view(request):
     """Renderizar template de login COM autenticação"""
@@ -222,6 +274,10 @@ def login_view(request):
         return redirect('dashboard')
     
     if request.method == 'POST':
+        # Import necessário aqui se não estiver no topo: from django.contrib.auth import authenticate, login
+        from django.contrib.auth import authenticate, login
+        from django.contrib import messages 
+        
         username = request.POST.get('username')
         password = request.POST.get('password')
         
@@ -242,6 +298,8 @@ def register_view(request):
         return redirect('dashboard')
     
     if request.method == 'POST':
+        from django.contrib import messages 
+        
         username = request.POST.get('username')
         password = request.POST.get('password')
         password_confirmation = request.POST.get('password_confirmation')
@@ -275,14 +333,19 @@ def register_view(request):
 
 def logout_view(request):
     """Fazer logout do usuário"""
+    # Import necessário se não estiver no topo: from django.contrib.auth import logout
+    from django.contrib.auth import logout
+    from django.contrib import messages
+    
     logout(request)
     messages.info(request, 'Você saiu da sua conta.')
-    return redirect('login')  # ← CORRIGIR: 'login' em vez de 'login-template'
+    return redirect('login')
 
 
 @login_required
 def dashboard(request):
     """Dashboard principal"""
+    # Import necessário se não estiver no topo: from django.contrib.auth.decorators import login_required
     context = {
         'user': request.user,
         'is_master': request.user.user_type == 'master' if request.user.is_authenticated else False

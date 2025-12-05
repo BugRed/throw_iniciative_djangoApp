@@ -1,3 +1,4 @@
+# accounts/urls_api.py
 from django.urls import path
 from . import views
 

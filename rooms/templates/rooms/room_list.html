@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Minhas Salas{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-4xl font-bold text-rpg-gold font-medieval">
+            Gerenciamento de Salas
+        </h1>
+        <a href="{% url 'room-create-template' %}" 
+           class="px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors">
+            <i class="fas fa-plus-circle mr-2"></i>Criar Nova Sala
+        </a>
+    </div>
+
+    {% if rooms %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for room in rooms %}
+        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-rpg-gold hover:border-rpg-red transition-colors">
+            <h2 class="text-2xl font-semibold text-white mb-2">{{ room.name }}</h2>
+            <p class="text-gray-400 mb-4">Código: <span class="text-rpg-gold font-mono">{{ room.code }}</span></p>
+
+            <div class="text-sm space-y-1 mb-4">
+                <p class="text-gray-300">
+                    Mestre: 
+                    {% if room.master == user %}
+                        <span class="text-rpg-gold font-bold">Você</span>
+                    {% else %}
+                        <span class="text-rpg-red">{{ room.master.username }}</span>
+                    {% endif %}
+                </p>
+                <p class="text-gray-300">
+                    Jogadores: 
+                    <span class="text-white">{{ room.players.count }}</span>
+                </p>
+            </div>
+
+            <div class="flex justify-start space-x-3">
+                <a href="{% url 'room-detail-template' pk=room.pk %}" 
+                   class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-info-circle mr-1"></i>Detalhes
+                </a>
+                
+                {% if room.master == user %}
+                <a href="{% url 'room-update-template' pk=room.pk %}" 
+                   class="px-3 py-1 bg-yellow-600 text-gray-900 text-sm rounded-lg hover:bg-yellow-700">
+                    <i class="fas fa-edit mr-1"></i>Editar
+                </a>
+                <a href="{% url 'room-delete-template' pk=room.pk %}" 
+                   class="px-3 py-1 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">
+                    <i class="fas fa-trash-alt mr-1"></i>Excluir
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center p-12 bg-gray-800 rounded-xl border border-gray-700">
+        <p class="text-xl text-gray-400">Você ainda não tem salas ou não participa de nenhuma.</p>
+        <a href="{% url 'room-create-template' %}" class="mt-4 inline-block text-rpg-gold hover:text-rpg-red">
+            Crie sua primeira sala!
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
