@@ -75,6 +75,14 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
             ]
         
         return form
+    def get_success_url(self):
+        room_pk = self.kwargs.get('room_pk')
+        if room_pk:
+            # ✅ Deve usar o namespace 'room_templates'
+            return reverse_lazy('room_templates:room-detail-template', kwargs={'pk': room_pk})
+            
+        # Redirecionamento de fallback (se não estiver criando dentro de uma sala)
+        return reverse_lazy('character-list-template')
 
     def form_valid(self, form):
         char_type = form.cleaned_data.get('character_type')
@@ -109,6 +117,8 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
         # Redireciona para a Sala se a criação foi feita no contexto da Sala
         room_pk = self.kwargs.get('room_pk')
         if room_pk:
-            return reverse_lazy('room-detail-template', kwargs={'pk': room_pk})
+            # ✅ CORREÇÃO APLICADA AQUI: Adicionado 'room_templates:'
+            return reverse_lazy('room_templates:room-detail-template', kwargs={'pk': room_pk})
+            
         # Caso contrário, redireciona para a lista geral de personagens
         return reverse_lazy('character-list-template')

@@ -1,85 +1,124 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} 
+
 {% block title %}
-    {% if form.instance.pk %}Editar Sala: {{ room.name }}{% else %}Criar Nova Sala{% endif %}
-{% endblock %}
+{% if form.instance.pk %}Editar Sala: {{ form.instance.name }}{% else %}Criar Nova Sala{% endif %} 
+{% endblock %} 
 
 {% block content %}
 <div class="min-h-screen p-8">
-    <div class="max-w-xl mx-auto">
-        <h1 class="text-4xl font-bold text-rpg-gold font-medieval mb-6 text-center">
-            {% if form.instance.pk %}
-                Editar Sala: {{ form.instance.name }}
-            {% else %}
-                Criar Nova Sala
-            {% endif %}
-        </h1>
+  <div class="max-w-xl mx-auto">
+    <h1 class="text-4xl font-bold text-rpg-gold font-medieval mb-6 text-center">
+      {% if form.instance.pk %} Editar Sala: {{ form.instance.name }} {% else %}
+      Criar Nova Sala 
+      {% endif %}
+    </h1>
 
-        <form method="POST" class="bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-rpg-gold space-y-6">
-            {% csrf_token %}
+    <form
+      method="POST"
+      class="bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-rpg-gold space-y-6"
+    >
+      {% csrf_token %}
 
-            <div>
-                <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">Nome da Sala</label>
-                {{ form.name }}
-                {% if form.name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.name.errors.0 }}</p>{% endif %}
-            </div>
+      <div>
+        <label
+          for="{{ form.name.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-1"
+          >Nome da Sala</label
+        >
+        {{ form.name }} {% if form.name.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ form.name.errors.0 }}</p>
+        {% endif %}
+      </div>
 
-            <div>
-                <label for="{{ form.code.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">Código de Acesso (Ex: RPGFICR)</label>
-                {{ form.code }}
-                {% if form.code.errors %}<p class="text-red-500 text-xs mt-1">{{ form.code.errors.0 }}</p>{% endif %}
-                <p class="text-gray-500 text-xs mt-1">Deve ser único. Jogadores usarão este código para entrar.</p>
-            </div>
+      <div>
+        <label
+          for="{{ form.code.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-1"
+          >Código de Acesso (Ex: RPGFICR)</label
+        >
+        {{ form.code }} {% if form.code.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ form.code.errors.0 }}</p>
+        {% endif %}
+        <p class="text-gray-500 text-xs mt-1">
+          Deve ser único. Jogadores usarão este código para entrar.
+        </p>
+      </div>
 
-            <div>
-                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">Descrição Curta</label>
-                {{ form.description }}
-                {% if form.description.errors %}<p class="text-red-500 text-xs mt-1">{{ form.description.errors.0 }}</p>{% endif %}
-            </div>
+      <div>
+        <label
+          for="{{ form.description.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-1"
+          >Descrição Curta</label
+        >
+        {{ form.description }} {% if form.description.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ form.description.errors.0 }}</p>
+        {% endif %}
+      </div>
 
-            <div>
-                <label for="{{ form.story.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">História/Lore (Detalhado)</label>
-                {{ form.story }}
-                {% if form.story.errors %}<p class="text-red-500 text-xs mt-1">{{ form.story.errors.0 }}</p>{% endif %}
-            </div>
+      <div>
+        <label
+          for="{{ form.story.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-1"
+          >História/Lore (Detalhado)</label
+        >
+        {{ form.story }} {% if form.story.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ form.story.errors.0 }}</p>
+        {% endif %}
+      </div>
 
-            {% if form.instance.pk %}
-            <div>
-                <label for="{{ form.is_active.id_for_label }}" class="inline-flex items-center text-gray-300">
-                    {{ form.is_active }}
-                    <span class="ml-2">Sala Ativa (Permite entrada de jogadores)</span>
-                </label>
-                {% if form.is_active.errors %}<p class="text-red-500 text-xs mt-1">{{ form.is_active.errors.0 }}</p>{% endif %}
-            </div>
-            {% endif %}
+      {% if form.instance.pk %}
+      <div>
+        <label
+          for="{{ form.is_active.id_for_label }}"
+          class="inline-flex items-center text-gray-300"
+        >
+          {{ form.is_active }}
+          <span class="ml-2">Sala Ativa (Permite entrada de jogadores)</span>
+        </label>
+        {% if form.is_active.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ form.is_active.errors.0 }}</p>
+        {% endif %}
+      </div>
+      {% endif %}
 
-            <div class="flex justify-between items-center">
-                <button type="submit" 
-                        class="px-6 py-3 bg-rpg-green text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
-                    <i class="fas fa-save mr-2"></i>
-                    {% if form.instance.pk %}Salvar Alterações{% else %}Criar Sala{% endif %}
-                </button>
-                <a href="{% url 'room-list-template' %}" class="text-gray-400 hover:text-rpg-red">Cancelar</a>
-            </div>
-            
-            {% for field in form.hidden_fields %}{{ field }}{% endfor %}
-            
-            <style>
-                .bg-gray-800 input, .bg-gray-800 textarea, .bg-gray-800 select {
-                    width: 100%;
-                    padding: 0.75rem;
-                    background-color: #374151; /* gray-700 */
-                    border: 1px solid #4B5563; /* gray-600 */
-                    border-radius: 0.5rem;
-                    color: white;
-                    resize: vertical;
-                }
-                .bg-gray-800 input:focus, .bg-gray-800 textarea:focus, .bg-gray-800 select:focus {
-                    outline: none;
-                    ring: 2px;
-                    ring-color: #FBBF24; /* yellow-500 (rpg-gold) */
-                }
-            </style>
-        </form>
-    </div>
+      <div class="flex justify-between items-center">
+        <button
+          type="submit"
+          class="px-6 py-3 bg-rpg-green text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+        >
+          <i class="fas fa-save mr-2"></i> 
+          {% if form.instance.pk %}Salvar Alterações{% else %}Criar Sala{% endif %}
+        </button>
+        <a
+          href="{% url 'room_templates:room-list-template' %}"
+          class="text-gray-400 hover:text-rpg-red"
+          >Cancelar</a
+        >
+      </div>
+
+      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+
+      <style>
+        .bg-gray-800 input,
+        .bg-gray-800 textarea,
+        .bg-gray-800 select {
+          width: 100%;
+          padding: 0.75rem;
+          background-color: #374151; /* gray-700 */
+          border: 1px solid #4b5563; /* gray-600 */
+          border-radius: 0.5rem;
+          color: white;
+          resize: vertical;
+        }
+        .bg-gray-800 input:focus,
+        .bg-gray-800 textarea:focus,
+        .bg-gray-800 select:focus {
+          outline: none;
+          ring: 2px;
+          ring-color: #fbbf24; /* yellow-500 (rpg-gold) */
+        }
+      </style>
+    </form>
+  </div>
 </div>
 {% endblock %}

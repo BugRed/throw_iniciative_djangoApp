@@ -13,7 +13,7 @@
                 <i class="fas fa-arrow-left mr-2"></i>Voltar
             </a>
             
-            <a href="{% url 'room-create-template' %}" 
+            <a href="{% url 'room_templates:room-create-template' %}" 
                class="px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors">
                 <i class="fas fa-plus-circle mr-2"></i>Criar Nova Sala
             </a>
@@ -43,17 +43,17 @@
             </div>
 
             <div class="flex justify-start space-x-3">
-                <a href="{% url 'room-detail-template' pk=room.pk %}" 
+                <a href="{% url 'room_templates:room-detail-template' pk=room.pk %}" 
                    class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
                     <i class="fas fa-info-circle mr-1"></i>Detalhes
                 </a>
                 
                 {% if room.master == user %}
-                <a href="{% url 'room-update-template' pk=room.pk %}" 
+                <a href="{% url 'room_templates:room-update-template' pk=room.pk %}" 
                    class="px-3 py-1 bg-yellow-600 text-gray-900 text-sm rounded-lg hover:bg-yellow-700">
                     <i class="fas fa-edit mr-1"></i>Editar
                 </a>
-                <a href="{% url 'room-delete-template' pk=room.pk %}" 
+                <a href="{% url 'room_templates:room-delete-template' pk=room.pk %}" 
                    class="px-3 py-1 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700">
                     <i class="fas fa-trash-alt mr-1"></i>Excluir
                 </a>
@@ -65,7 +65,7 @@
     {% else %}
     <div class="text-center p-12 bg-gray-800 rounded-xl border border-gray-700">
         <p class="text-xl text-gray-400">Você ainda não tem salas ou não participa de nenhuma.</p>
-        <a href="{% url 'room-create-template' %}" class="mt-4 inline-block text-rpg-gold hover:text-rpg-red">
+        <a href="{% url 'room_templates:room-create-template' %}" class="mt-4 inline-block text-rpg-gold hover:text-rpg-red">
             Crie sua primeira sala!
         </a>
     </div>

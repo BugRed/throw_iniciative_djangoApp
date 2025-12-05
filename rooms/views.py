@@ -14,12 +14,15 @@ from django.contrib.auth import get_user_model
 User = get_user_model() 
 from django.db.models import Q
 
+# Importação CRÍTICA para Personagens (Assumindo que está no app 'characters')
+from characters.models import Character 
+
 # Importações para Templates (Django CBV)
 from django.views.generic import (
     ListView, CreateView, UpdateView, DeleteView, DetailView
 )
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import Room 
+from .models import Room
 
 # ==================== VIEWS BASEADAS EM CLASSE (API - DRF) ====================
 
@@ -82,7 +85,6 @@ class RoomMasterRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self):
         # Permite acesso se o usuário for o master da sala ou superuser
         room = self.get_object()
-        # Assumindo que 'master' é uma ForeignKey em Room
         return self.request.user == room.master or self.request.user.is_superuser
 
 # 1. LISTAGEM DE SALAS (Template: room-list-template)
@@ -111,23 +113,41 @@ class RoomCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('room-list-template')
+        # ✅ CORREÇÃO APLICADA AQUI: Incluindo o namespace 'room_templates'
+        return reverse_lazy('room_templates:room-list-template')
 
 # 3. DETALHES DA SALA (Template: room-detail-template) - CORRIGIDA
 class RoomDetailTemplateView(LoginRequiredMixin, DetailView):
-    """Exibe os detalhes de uma sala (view de Template)."""
+    """Exibe os detalhes de uma sala (view de Template), incluindo a gestão de personagens."""
     model = Room
     template_name = 'rooms/room_detail.html'
     context_object_name = 'room'
     
-    # Adicionar o método get_context_data para passar a lista de usuários
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         room = self.get_object()
         user = self.request.user
         
-        # Apenas adicione a lista de usuários se o usuário logado for o mestre
+        # --- 1. Lógica de Gestão de Personagens (NOVA) ---
+        # Personagens atualmente na sala
+        context['current_characters'] = room.characters.all().select_related('owner')
+
         if user.is_authenticated and user == room.master:
+            
+            # Filtra personagens disponíveis para adição:
+            # - PJs (character_type='player') de qualquer dono.
+            # - NPCs e Monstros (character_type in ['npc', 'monster']) que SÃO do Mestre atual (owner=user).
+            # E EXCLUI personagens que JÁ estão nesta sala (rooms=room).
+            available_characters_qs = Character.objects.filter(
+                Q(character_type='player') | Q(owner=user, character_type__in=['npc', 'monster'])
+            ).exclude(
+                rooms=room
+            ).order_by('character_type', 'name')
+            
+            context['available_characters'] = available_characters_qs
+            # --- Fim da Lógica de Gestão de Personagens ---
+
+            # --- 2. Lógica de Gestão de Jogadores (EXISTENTE) ---
             # Filtra apenas usuários do tipo 'player' que NÃO estão na sala (e não são o master)
             players_in_room_pks = room.players.values_list('pk', flat=True)
             
@@ -135,7 +155,8 @@ class RoomDetailTemplateView(LoginRequiredMixin, DetailView):
             context['all_users'] = User.objects.filter(user_type='player').exclude(
                 Q(pk=user.pk) | Q(pk__in=players_in_room_pks)
             ).order_by('username')
-            
+            # --- Fim da Lógica de Gestão de Jogadores ---
+
         return context
 
     
@@ -148,8 +169,8 @@ class RoomUpdateView(RoomMasterRequiredMixin, UpdateView):
     template_name = 'rooms/room_form.html'
     
     def get_success_url(self):
-        return reverse_lazy('room-detail-template', kwargs={'pk': self.object.pk})
-
+        return reverse_lazy('room_templates:room-detail-template', kwargs={'pk': self.object.pk})
+    
 # 5. DELEÇÃO DE SALA (Template: room-delete-template)
 class RoomDeleteView(RoomMasterRequiredMixin, DeleteView):
     """Permite que o mestre da sala delete-a."""
@@ -164,8 +185,9 @@ class RoomDeleteView(RoomMasterRequiredMixin, DeleteView):
 @login_required
 def toggle_player_in_room(request, room_pk, user_pk):
     """
-    Permite ao Mestre da Sala adicionar ou remover um Jogador.
+    Permite ao Mestre da Sala adicionar ou remover um Jogador (usuário).
     """
+    # ... (Sua lógica existente para toggle_player_in_room permanece inalterada)
     room = get_object_or_404(Room, pk=room_pk)
     target_user = get_object_or_404(User, pk=user_pk)
 
@@ -196,4 +218,38 @@ def toggle_player_in_room(request, room_pk, user_pk):
         room.players.add(target_user)
         messages.success(request, f"O Jogador {target_user.username} foi adicionado à sala com sucesso.")
 
+    return redirect('room-detail-template', pk=room_pk)
+
+
+@login_required
+def add_character_to_room(request, room_pk, character_pk):
+    """
+    Adiciona um personagem existente a uma sala (apenas para o Mestre da sala) via POST.
+    """
+    if request.method != 'POST':
+        messages.error(request, "Ação inválida.")
+        return redirect('room-detail-template', pk=room_pk)
+        
+    room = get_object_or_404(Room, pk=room_pk)
+    character = get_object_or_404(Character, pk=character_pk) 
+    
+    # 1. Checagem de Permissão: Apenas o dono da sala (Mestre) pode adicionar
+    if room.master != request.user:
+        messages.error(request, "Você não tem permissão para gerenciar personagens nesta sala.")
+        return redirect('room-detail-template', pk=room_pk)
+
+    # 2. Checagem de Lógica: Master pode adicionar PJs de outros ou seus próprios NPCs/Monstros
+    can_be_added = (
+        character.character_type == 'player' or 
+        (character.owner == request.user and character.character_type in ['npc', 'monster'])
+    )
+    
+    if not can_be_added:
+        messages.error(request, "Este personagem não é válido para ser adicionado nesta sala.")
+        return redirect('room-detail-template', pk=room_pk)
+    
+    # 3. Adição
+    room.characters.add(character)
+    messages.success(request, f"Personagem '{character.name}' adicionado à sala '{room.name}'.")
+    
     return redirect('room-detail-template', pk=room_pk)
