@@ -44,7 +44,7 @@
         {% comment %} Link de Criação de Personagem {% endcomment %} 
         {% if user in room.players.all or room.master == user %}
         <a
-          href="{% url 'character-create-in-room' room_pk=room.pk %}"
+          href="{% url 'room_templates:character-create-in-room' room_pk=room.pk %}"
           class="inline-block px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors"
         >
           <i class="fas fa-plus-circle mr-2"></i>
@@ -67,9 +67,9 @@
           {% if available_characters %}
           <form
             method="POST"
-            action="{% url 'room_templates:room-add-character' room_pk=room.pk character_pk=0 %}"
+            action="{% url 'room_templates:add-character-to-room' room_pk=room.pk character_pk=0 %}"
             id="add-character-form"
-            data-base-url="{% url 'room_templates:room-add-character' room_pk=room.pk character_pk=0 %}"
+            data-base-url="{% url 'room_templates:add-character-to-room' room_pk=room.pk character_pk=0 %}"
           >
             </form>
           {% endif %}
