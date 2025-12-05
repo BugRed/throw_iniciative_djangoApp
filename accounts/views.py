@@ -17,6 +17,7 @@ from django.views.generic import (
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.contrib import messages
 
 
 User = get_user_model()
@@ -351,3 +352,20 @@ def dashboard(request):
         'is_master': request.user.user_type == 'master' if request.user.is_authenticated else False
     }
     return render(request, 'accounts/dashboard.html', context)
+
+
+class ProfileUpdateTemplateView(LoginRequiredMixin, UpdateView):
+    model = User
+    # ✅ Garanta que username, email e bio estejam na lista (se este for o template para o perfil do jogador)
+    fields = ['username', 'email', 'bio'] 
+    template_name = 'accounts/user_form.html' 
+    
+    def get_object(self):
+        return self.request.user
+        
+    def get_success_url(self):
+        from django.contrib import messages
+        messages.success(self.request, 'Perfil atualizado com sucesso!')
+        # Redireciona para o dashboard/perfil
+        return reverse_lazy('dashboard')
+    

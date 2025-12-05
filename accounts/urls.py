@@ -17,4 +17,5 @@ urlpatterns = [
     path('me/', views.me, name='api-me'),
     path('change-password/', views.change_password, name='api-change-password'),
     path('stats/', views.user_stats, name='api-stats'),
+    path('profile/', views.ProfileUpdateTemplateView.as_view(), name='profile-template'),
 ]

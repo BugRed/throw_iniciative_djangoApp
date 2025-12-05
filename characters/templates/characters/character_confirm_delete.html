@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}Confirmar Deleção{% endblock %}
+{% block title %}Confirmar Deleção de Personagem{% endblock %}
 
 {% block content %}
 <div class="min-h-screen p-8">
     <div class="max-w-md mx-auto text-center">
         <div class="bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-red-600">
-            <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+            <i class="fas fa-skull-crossbones text-6xl text-red-500 mb-4"></i>
             <h1 class="text-3xl font-bold text-red-500 mb-4 font-medieval">
-                Confirmar Deleção
+                Confirmar Deleção de Personagem
             </h1>
             
             <p class="text-gray-300 mb-6">
-                Você tem certeza que deseja deletar a sala 
-                <span class="font-semibold text-rpg-gold">"{{ room.name }}"</span>?
+                Você tem certeza que deseja deletar o personagem 
+                <span class="font-semibold text-rpg-gold">"{{ character.name }}"</span>?
             </p>
             
             <p class="text-sm text-gray-500 mb-8">
-                Esta ação é **irreversível** e todos os dados associados (personagens, iniciativa) serão perdidos.
+                Esta ação é **irreversível**. O personagem será removido permanentemente de todas as salas.
             </p>
 
             <form method="POST" class="flex justify-center space-x-4">
@@ -25,7 +25,7 @@
                         class="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors">
                     <i class="fas fa-trash-alt mr-2"></i>Deletar Permanentemente
                 </button>
-                <a href="{% url 'room_templates:room-detail-template' pk=room.pk %}" 
+                <a href="{% url 'characters:character-detail-template' pk=character.pk %}" 
                    class="px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors">
                     Cancelar
                 </a>

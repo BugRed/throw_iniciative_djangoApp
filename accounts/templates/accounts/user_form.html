@@ -1,84 +1,92 @@
-{% extends 'base.html' %}
-{% block title %}Editar Usuário: {{ target_user.username }}{% endblock %}
+{% extends 'base.html' %} 
+{% block title %}Editar Perfil{% endblock %} 
 
 {% block content %}
 <div class="min-h-screen p-8">
-    <div class="max-w-xl mx-auto">
-        <h1 class="text-4xl font-bold text-rpg-gold font-medieval mb-6 text-center">
-            Editar Usuário: {{ target_user.username }}
-        </h1>
+  <div class="max-w-xl mx-auto">
+    <h1 class="text-4xl font-bold text-rpg-gold font-medieval mb-6 text-center">
+      Editar Perfil: {{ request.user.username }}
+    </h1>
 
-        <form method="POST" class="bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-rpg-gold space-y-6">
-            {% csrf_token %}
+    <form
+      method="POST"
+      action="{% url 'profile-template' %}"
+      class="bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-rpg-gold space-y-6"
+    >
+      {% csrf_token %}
 
-            <div>
-                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">Nome de Usuário (Read-only)</label>
-                <input type="text" value="{{ target_user.username }}" disabled 
-                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400 cursor-not-allowed">
-            </div>
+      <div>
+        <label
+          class="block text-sm font-medium text-gray-300 mb-1"
+          >Nome de Usuário</label
+        >
+        <input
+          type="text"
+          value="{{ request.user.username }}"
+          disabled 
+          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-400 cursor-not-allowed"
+        />
+        
+        <input type="hidden" name="username" value="{{ request.user.username }}" />
+      </div>
 
-            <div>
-                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
-                {{ form.email }}
-                {% if form.email.errors %}<p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>{% endif %}
-            </div>
+      <div>
+        <label
+          for="{{ form.email.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-1"
+          >Email</label
+        >
+        {{ form.email }} {% if form.email.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
+        {% endif %}
+      </div>
 
-            <div>
-                <label for="{{ form.user_type.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">Tipo de Conta</label>
-                {{ form.user_type }}
-                {% if form.user_type.errors %}<p class="text-red-500 text-xs mt-1">{{ form.user_type.errors.0 }}</p>{% endif %}
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="{{ form.is_active.id_for_label }}" class="inline-flex items-center text-gray-300">
-                        {{ form.is_active }}
-                        <span class="ml-2">Usuário Ativo</span>
-                    </label>
-                    {% if form.is_active.errors %}<p class="text-red-500 text-xs mt-1">{{ form.is_active.errors.0 }}</p>{% endif %}
-                </div>
-                <div>
-                    <label for="{{ form.is_staff.id_for_label }}" class="inline-flex items-center text-gray-300">
-                        {{ form.is_staff }}
-                        <span class="ml-2">Acesso ao Admin</span>
-                    </label>
-                    {% if form.is_staff.errors %}<p class="text-red-500 text-xs mt-1">{{ form.is_staff.errors.0 }}</p>{% endif %}
-                </div>
-            </div>
+      <div>
+        <label
+          for="{{ form.bio.id_for_label }}"
+          class="block text-sm font-medium text-gray-300 mb-1"
+          >Biografia</label
+        >
+        {{ form.bio }} {% if form.bio.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ form.bio.errors.0 }}</p>
+        {% endif %}
+      </div>
 
-            <div>
-                <label for="{{ form.bio.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">Biografia</label>
-                {{ form.bio }}
-                {% if form.bio.errors %}<p class="text-red-500 text-xs mt-1">{{ form.bio.errors.0 }}</p>{% endif %}
-            </div>
+      <div class="flex justify-between items-center">
+        <button
+          type="submit"
+          class="px-6 py-3 bg-rpg-green text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+        >
+          <i class="fas fa-save mr-2"></i>Salvar Alterações
+        </button>
+        <a href="{% url 'dashboard' %}" class="text-gray-400 hover:text-rpg-red"
+          >Cancelar</a
+        >
+      </div>
 
-            <div class="flex justify-between items-center">
-                <button type="submit" 
-                        class="px-6 py-3 bg-rpg-green text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
-                    <i class="fas fa-save mr-2"></i>Salvar Alterações
-                </button>
-                <a href="{% url 'user-list' %}" class="text-gray-400 hover:text-rpg-red">Cancelar</a>
-            </div>
-            
-            {% for field in form.hidden_fields %}{{ field }}{% endfor %}
-            
-            <style>
-                .bg-gray-800 input, .bg-gray-800 textarea, .bg-gray-800 select {
-                    width: 100%;
-                    padding: 0.75rem;
-                    background-color: #374151; /* gray-700 */
-                    border: 1px solid #4B5563; /* gray-600 */
-                    border-radius: 0.5rem;
-                    color: white;
-                    resize: vertical;
-                }
-                .bg-gray-800 input:focus, .bg-gray-800 textarea:focus, .bg-gray-800 select:focus {
-                    outline: none;
-                    ring: 2px;
-                    ring-color: #FBBF24; /* yellow-500 (rpg-gold) */
-                }
-            </style>
-        </form>
-    </div>
+      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+
+      <style>
+        .bg-gray-800 input,
+        .bg-gray-800 textarea,
+        .bg-gray-800 select {
+          width: 100%;
+          padding: 0.75rem;
+          background-color: #374151; /* gray-700 */
+          border: 1px solid #4b5563; /* gray-600 */
+          border-radius: 0.5rem;
+          color: white;
+          resize: vertical;
+        }
+        .bg-gray-800 input:focus,
+        .bg-gray-800 textarea:focus,
+        .bg-gray-800 select:focus {
+          outline: none;
+          ring: 2px;
+          ring-color: #fbbf24; /* yellow-500 (rpg-gold) */
+        }
+      </style>
+    </form>
+  </div>
 </div>
 {% endblock %}

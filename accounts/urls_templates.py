@@ -19,7 +19,9 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     
     # Dashboard
-    path('dashboard/', views.dashboard, name='dashboard'), 
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('profile/', views.ProfileUpdateTemplateView.as_view(), name='profile-template'),
+
     
     # ------------------ GESTÃO DE PERFIL (Usuário Logado) ------------------
     # Usando UserUpdateView (ou ProfileUpdateView dedicada), mas sem PK,

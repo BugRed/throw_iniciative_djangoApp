@@ -1,0 +1,160 @@
+{% extends 'base.html' %} 
+{% load character_extras %} 
+
+{% block title %}Detalhes do Personagem: {{ character.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-8">
+  <div
+    class="max-w-4xl mx-auto bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-rpg-gold"
+  >
+    <div
+      class="flex justify-between items-start border-b border-gray-700 pb-4 mb-6"
+    >
+      <h1 class="text-4xl font-bold text-rpg-gold font-medieval">
+        {{ character.name }}
+        <span class="text-sm text-gray-400 font-sans ml-2"
+          >({{ character.get_character_type_display }})</span
+        >
+      </h1>
+
+      {% if request.user == character.owner %}
+      <div class="flex space-x-3">
+        <a
+          href="{% url 'characters:character-update-template' pk=character.pk %}"
+          class="px-4 py-2 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors flex items-center"
+        >
+          <i class="fas fa-edit mr-2"></i> Editar
+        </a>
+        <a
+          href="{% url 'characters:character-delete-template' pk=character.pk %}"
+          class="px-4 py-2 bg-red-700 text-white font-semibold rounded-lg hover:bg-red-800 transition-colors flex items-center"
+        >
+          <i class="fas fa-trash-alt mr-2"></i> Deletar
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <div class="md:col-span-1 space-y-4">
+        {% if character.image %}
+        <img
+          src="{{ character.image.url }}"
+          alt="Imagem de {{ character.name }}"
+          class="w-full h-auto object-cover rounded-lg border-2 border-rpg-gold shadow-lg"
+        />
+        {% else %}
+        <div
+          class="w-full h-64 bg-gray-700 rounded-lg flex items-center justify-center text-gray-500 border-2 border-gray-600"
+        >
+          Sem Imagem
+        </div>
+        {% endif %}
+
+        <div class="bg-gray-700 p-4 rounded-lg shadow">
+          <h3 class="text-xl text-rpg-gold font-semibold mb-2">Informações</h3>
+          <p class="text-gray-300">
+            <strong class="text-gray-400">Dono:</strong> {{
+            character.owner.username }}
+          </p>
+          <p class="text-gray-300">
+            <strong class="text-gray-400">Tipo:</strong> {{
+            character.get_character_type_display }}
+          </p>
+          {% if character.model_3d %}
+          <p class="text-gray-300">
+            <strong class="text-gray-400">Modelo 3D:</strong>
+            <a
+              href="{{ character.model_3d.url }}"
+              class="text-rpg-gold hover:underline"
+              >Visualizar</a
+            >
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="md:col-span-2 space-y-6">
+        
+        <div>
+          <h3
+            class="text-2xl text-rpg-gold font-semibold mb-2 border-b border-gray-700 pb-1"
+          >
+            Descrição
+          </h3>
+          <p class="text-gray-300 whitespace-pre-wrap">
+            {{ character.description|default:"Nenhuma descrição detalhada
+            fornecida." }}
+          </p>
+        </div>
+
+        <div>
+          <h3
+            class="text-2xl text-rpg-gold font-semibold mb-3 border-b border-gray-700 pb-1"
+          >
+            Combate & Status
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div class="bg-gray-700 p-3 rounded-lg shadow">
+              <p class="text-xl font-bold text-rpg-green">
+                {{ character.hit_points }}
+              </p>
+              <p class="text-sm text-gray-400">PV</p>
+            </div>
+            <div class="bg-gray-700 p-3 rounded-lg shadow">
+              <p class="text-xl font-bold text-rpg-gold">
+                {{ character.calculate_ac }}
+              </p>
+              <p class="text-sm text-gray-400">CA</p>
+            </div>
+            <div class="bg-gray-700 p-3 rounded-lg shadow">
+              <p class="text-xl font-bold text-white">{{ character.speed }}</p>
+              <p class="text-sm text-gray-400">Velocidade</p>
+            </div>
+            <div class="bg-gray-700 p-3 rounded-lg shadow">
+              <p class="text-xl font-bold text-white">
+                {{ character.calculate_modifier }}
+              </p>
+              <p class="text-sm text-gray-400">Bônus Proficiência</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3
+            class="text-2xl text-rpg-gold font-semibold mb-3 border-b border-gray-700 pb-1"
+          >
+            Atributos (D20)
+          </h3>
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-4 text-center">
+            {% with attributes=character.get_all_attributes %} 
+            {% for attr_name, attr_value in attributes.items %}
+            <div class="bg-gray-700 p-3 rounded-lg shadow">
+              <p class="text-xs text-gray-400">{{ attr_name }}</p>
+              <p class="text-2xl font-bold text-rpg-gold">{{ attr_value }}</p>
+              <p class="text-sm font-semibold text-white">
+                {% with mod=character.get_attribute_modifier|get_item:attr_name
+                %} 
+                ({{ mod|add_sign }}) 
+              </p>
+            </div>
+            {% endfor %} 
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-8 pt-4 border-t border-gray-700 text-right">
+      <a
+        href="{% url 'characters:character-list-template' %}"
+        class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+      >
+        Voltar para a Lista
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

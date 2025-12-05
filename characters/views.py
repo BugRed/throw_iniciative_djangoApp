@@ -2,14 +2,11 @@ from rest_framework import generics, permissions
 from django.views.generic import (
     ListView, CreateView, UpdateView, DeleteView, DetailView
 ) # Importar Views de Classe para Templates
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy # Para redirecionamento após sucesso
 
 from .models import Character
-from .serializers import CharacterSerializer # Manter este se for usado apenas para API
-
-from django.shortcuts import get_object_or_404 # Importar se não existir
-from django.urls import reverse_lazy 
+from .serializers import CharacterSerializer
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 try:
     from rooms.models import Room
@@ -76,13 +73,13 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
         
         return form
     def get_success_url(self):
+        # Redireciona para a Sala se a criação foi feita no contexto da Sala
         room_pk = self.kwargs.get('room_pk')
         if room_pk:
-            # ✅ Deve usar o namespace 'room_templates'
+            # OK: Este já usa o namespace 'room_templates'
             return reverse_lazy('room_templates:room-detail-template', kwargs={'pk': room_pk})
             
-        # Redirecionamento de fallback (se não estiver criando dentro de uma sala)
-        return reverse_lazy('character-list-template')
+        return reverse_lazy('characters:character-list-template')
 
     def form_valid(self, form):
         char_type = form.cleaned_data.get('character_type')
@@ -122,3 +119,78 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
             
         # Caso contrário, redireciona para a lista geral de personagens
         return reverse_lazy('character-list-template')
+    
+# 3. EDIÇÃO DE PERSONAGEM (Template: character-form.html)
+class CharacterUpdateTemplateView(LoginRequiredMixin, UpdateView):
+    """Permite que o dono edite seu personagem."""
+    model = Character
+    # Reutiliza a lista de campos da criação
+    fields = [
+        'name', 'character_type', 'description', 'image', 'model_3d',
+        'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma',
+        'hit_points', 'speed'
+    ]
+    template_name = 'characters/character_form.html'
+    context_object_name = 'character'
+    
+    def get_queryset(self):
+        """Garante que apenas o dono do personagem (ou o mestre, se aplicável) possa editá-lo."""
+        # Filtra os personagens que pertencem ao usuário logado
+        # Se você quiser que o Mestre possa editar, adicione lógica OR para room.master == user
+        return Character.objects.filter(owner=self.request.user)
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        user_type = self.request.user.user_type
+        
+        # Se for um PJ, impeça a alteração do tipo de personagem
+        if form.instance.character_type == 'player':
+            form.fields['character_type'].disabled = True
+        
+        # Restringe as opções se o usuário for um player (apenas pode ser 'player')
+        if user_type == 'player':
+            form.fields['character_type'].choices = [('player', 'Personagem Jogador')]
+            # O campo já está desabilitado acima, mas garantimos que não haja outra opção.
+        elif user_type == 'master':
+             # Mestres podem alternar entre NPC e Monstro
+             form.fields['character_type'].choices = [
+                ('npc', 'NPC (Mestre)'), 
+                ('monster', 'Monstro')
+            ]
+        
+        return form
+
+    def get_success_url(self):
+        """Redireciona para a página de detalhes do personagem após a edição."""
+        return reverse_lazy('characters:character-detail-template', kwargs={'pk': self.object.pk})
+
+# 4. DETALHES DE PERSONAGEM (Template: character-detail.html)
+class CharacterDetailTemplateView(LoginRequiredMixin, DetailView):
+    """Exibe os detalhes de um personagem. Deve ser visível apenas para o dono."""
+    model = Character
+    template_name = 'characters/character_detail.html'
+    context_object_name = 'character'
+
+    def get_queryset(self):
+        """Permite que o dono do personagem (ou mestre da sala) veja os detalhes."""
+        # Retorna todos os personagens, a permissão mais restrita pode ser aplicada no template.
+        # Por simplicidade, faremos a verificação de propriedade no template ou em um mixin mais complexo.
+        return Character.objects.all()
+    
+class CharacterOwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    model = Character
+    
+    def test_func(self):
+        # Permite acesso se o usuário for o dono do personagem
+        character = self.get_object()
+        return self.request.user == character.owner or self.request.user.is_superuser
+
+# 5. VIEW DE DELEÇÃO
+class CharacterDeleteView(CharacterOwnerRequiredMixin, DeleteView):
+    model = Character
+    template_name = 'characters/character_confirm_delete.html' 
+    context_object_name = 'character'
+
+    def get_success_url(self):
+        # Retorna para a lista de personagens após a deleção
+        return reverse_lazy('characters:character-list-template')

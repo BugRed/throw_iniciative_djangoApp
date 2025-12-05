@@ -1,66 +1,102 @@
 {% extends 'base.html' %}
+
 {% block title %}Meus Personagens{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-        <h1 class="text-4xl font-bold text-rpg-gold font-medieval">
-            Meus Personagens
-        </h1>
-        <div class="flex space-x-3">
-            <a href="{% url 'dashboard' %}" 
-               class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Voltar
-            </a>
-            
-            <a href="{% url 'character-create-template' %}" 
-               class="px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors">
-                <i class="fas fa-plus-circle mr-2"></i>Criar Novo Personagem
-            </a>
-        </div>
+  <div
+    class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4"
+  >
+    <h1 class="text-4xl font-bold text-rpg-gold font-medieval">
+      Meus Personagens
+    </h1>
+    <div class="flex space-x-3">
+      <a
+        href="{% url 'dashboard' %}"
+        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+      >
+        <i class="fas fa-arrow-left mr-2"></i>Voltar
+      </a>
+
+      <a
+        href="{% url 'characters:character-create-template' %}"
+        class="px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors"
+      >
+        <i class="fas fa-plus-circle mr-2"></i>Criar Novo Personagem
+      </a>
     </div>
+  </div>
 
-    {% if characters %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for character in characters %}
-        <div class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-rpg-gold hover:border-rpg-red transition-colors">
-            <div class="flex justify-between items-start mb-3">
-                <h2 class="text-2xl font-semibold text-white">{{ character.name }}</h2>
-                <span class="text-sm font-semibold px-3 py-1 rounded-full 
-                             {% if character.character_type == 'player' %}bg-blue-800 text-blue-300{% elif character.character_type == 'npc' %}bg-purple-800 text-purple-300{% else %}bg-red-800 text-red-300{% endif %}">
-                    {{ character.get_character_type_display }}
-                </span>
-            </div>
+  {% if characters %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for character in characters %}
+    <div
+      class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-rpg-gold hover:border-rpg-red transition-colors"
+    >
+      <div class="flex justify-between items-start mb-3">
+        <h2 class="text-2xl font-semibold text-white">{{ character.name }}</h2>
+        <span
+          class="text-sm font-semibold px-3 py-1 rounded-full {% if character.character_type == 'player' %}bg-blue-800 text-blue-300{% elif character.character_type == 'npc' %}bg-purple-800 text-purple-300{% else %}bg-red-800 text-red-300{% endif %}"
+        >
+          {{ character.get_character_type_display }}
+        </span>
+      </div>
 
-            <p class="text-gray-400 mb-4 line-clamp-3">{{ character.description|default:"Sem descrição." }}</p>
+      <p class="text-gray-400 mb-4 line-clamp-3">
+        {{ character.description|default:"Sem descrição." }}
+      </p>
 
-            <div class="grid grid-cols-3 gap-2 text-xs mb-4">
-                <p class="text-gray-400">FOR: <span class="text-white">{{ character.strength }}</span></p>
-                <p class="text-gray-400">DES: <span class="text-white">{{ character.dexterity }}</span></p>
-                <p class="text-gray-400">CON: <span class="text-white">{{ character.constitution }}</span></p>
-                <p class="text-gray-400">PV: <span class="text-rpg-green">{{ character.hit_points }}</span></p>
-                <p class="text-gray-400">CA: <span class="text-rpg-gold">{{ character.armor_class }}</span></p>
-                <p class="text-gray-400">Iniciativa: <span class="text-white">{{ character.get_initiative_modifier }}</span></p>
-            </div>
+      <div class="grid grid-cols-3 gap-2 text-xs mb-4">
+        <p class="text-gray-400">
+          FOR: <span class="text-white">{{ character.strength }}</span>
+        </p>
+        <p class="text-gray-400">
+          DES: <span class="text-white">{{ character.dexterity }}</span>
+        </p>
+        <p class="text-gray-400">
+          CON: <span class="text-white">{{ character.constitution }}</span>
+        </p>
+        <p class="text-gray-400">
+          PV: <span class="text-rpg-green">{{ character.hit_points }}</span>
+        </p>
+        <p class="text-gray-400">
+          CA: <span class="text-rpg-gold">{{ character.armor_class }}</span>
+        </p>
+        <p class="text-gray-400">
+          Iniciativa:
+          <span class="text-white"
+            >{{ character.get_initiative_modifier }}</span
+          >
+        </p>
+      </div>
 
-            <div class="flex justify-end space-x-3 mt-4">
-                <a href="#" class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                    <i class="fas fa-info-circle mr-1"></i>Ver Detalhes
-                </a>
-                <a href="#" class="px-3 py-1 bg-yellow-600 text-gray-900 text-sm rounded-lg hover:bg-yellow-700">
-                    <i class="fas fa-edit mr-1"></i>Editar
-                </a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="text-center p-12 bg-gray-800 rounded-xl border border-gray-700">
-        <p class="text-xl text-gray-400">Você ainda não tem personagens criados.</p>
-        <a href="{% url 'character-create-template' %}" class="mt-4 inline-block text-rpg-gold hover:text-rpg-red">
-            Crie seu primeiro personagem!
+      <div class="flex justify-end space-x-3 mt-4">
+        <a
+          href="{% url 'characters:character-detail-template' pk=character.pk %}"
+          class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+        >
+          <i class="fas fa-info-circle mr-1"></i>Ver Detalhes
         </a>
+        <a
+          href="{% url 'characters:character-update-template' pk=character.pk %}"
+          class="px-3 py-1 bg-yellow-600 text-gray-900 text-sm rounded-lg hover:bg-yellow-700"
+        >
+          <i class="fas fa-edit mr-1"></i>Editar
+        </a>
+      </div>
     </div>
-    {% endif %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center p-12 bg-gray-800 rounded-xl border border-gray-700">
+    <p class="text-xl text-gray-400">Você ainda não tem personagens criados.</p>
+    <a
+      href="{% url 'characters:character-create-template' %}"
+      class="mt-4 inline-block text-rpg-gold hover:text-rpg-red"
+    >
+      Crie seu primeiro personagem!
+    </a>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
