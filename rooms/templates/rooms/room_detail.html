@@ -41,18 +41,50 @@
           Gerenciamento de Personagens
         </h3>
 
-        {% comment %} Link de Criação de Personagem {% endcomment %} 
-        {% if user in room.players.all or room.master == user %}
+        {# --- 1. Link de Criação de Personagem (Mestre ou Jogador) --- #}
+        {% if room.master == user %}
         <a
-          href="{% url 'room_templates:character-create-in-room' room_pk=room.pk %}"
-          class="inline-block px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors"
+            href="{% url 'room_templates:character-create-in-room' room_pk=room.pk %}"
+            class="inline-block px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors mb-4"
         >
-          <i class="fas fa-plus-circle mr-2"></i>
-          {% if room.master == user %}Criar NPC/Monstro{% else %}Criar Meu Personagem{% endif %}
+            <i class="fas fa-plus-circle mr-2"></i> Criar NPC/Monstro (Mestre)
         </a>
+        {% elif can_add_player_character %}
+        <a
+            href="{% url 'room_templates:character-create-in-room' room_pk=room.pk %}"
+            class="inline-block px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors mb-4"
+        >
+            <i class="fas fa-plus-circle mr-2"></i> Criar Meu Personagem (PJ)
+        </a>
+        {% else %}
+            {% if user.user_type == 'player' %}
+            <p class="text-sm text-gray-400 mb-4">
+                Você já possui um Personagem Jogador ativo nesta sala.
+            </p>
+            {% endif %}
         {% endif %} 
-        </div> 
+
+        <div class="mt-4 pt-4 border-t border-gray-700">
+            <h4 class="text-lg text-white font-semibold mb-3">
+                Personagens Ativos na Sala
+            </h4>
+            <div class="flex flex-wrap gap-2">
+                {% for character in current_characters %}
+                <span class="bg-blue-800 text-white px-3 py-1 text-sm rounded-full">
+                    {{ character.name }} 
+                    ({{ character.get_character_type_display }}) 
+                    {% if character.owner != room.master %}(Dono: {{ character.owner.username }}){% endif %}
+                    {# TODO: Adicionar link para remover personagem (se for master) #}
+                </span>
+                {% empty %}
+                <p class="text-gray-500">Nenhum personagem foi adicionado a esta sala.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+      </div> 
       
+      {# --- 2. Formulário de Adição de Personagem (Apenas Mestre) --- #}
       {% if room.master == user %}
       <div class="mt-4 pt-4 border-t border-rpg-gold">
         <h3 class="text-2xl text-rpg-gold font-medieval font-semibold mb-4">
@@ -61,22 +93,43 @@
 
         <div class="bg-gray-900 p-6 rounded-xl space-y-4">
           <h4 class="text-xl text-white font-semibold mb-3">
-            Personagens Disponíveis (PJs e seus NPCs/Monstros)
+            Personagens Disponíveis para Adição
           </h4>
 
           {% if available_characters %}
           <form
             method="POST"
-            action="{% url 'room_templates:add-character-to-room' room_pk=room.pk character_pk=0 %}"
+            action="{% url 'room_templates:add-character-to-room' room_pk=room.pk %}"
             id="add-character-form"
-            data-base-url="{% url 'room_templates:add-character-to-room' room_pk=room.pk character_pk=0 %}"
+            class="space-y-4"
           >
-            </form>
+            {% csrf_token %}
+            <label for="char_select" class="block text-gray-400">Selecione o Personagem:</label>
+            <select name="character_pk" id="char_select" required
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                <option value="" disabled selected>--- Escolha um personagem ---</option>
+                {% for character in available_characters %}
+                    <option value="{{ character.pk }}">
+                        {{ character.name }} ({{ character.get_character_type_display }}) 
+                        {% if character.character_type == 'player' %}- Jogador: {{ character.owner.username }}{% endif %}
+                        {% if character.character_type in 'npc' or character.character_type == 'monster' %}- MEU NPC{% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit" 
+                    class="px-6 py-3 bg-rpg-green text-white font-semibold rounded-lg hover:bg-green-700 transition-colors w-full">
+                Adicionar Selecionado
+            </button>
+          </form>
+          {% else %}
+            <p class="text-gray-500">Nenhum PJ livre ou NPC/Monstro de sua propriedade está disponível para adição.</p>
           {% endif %}
         </div>
       </div>
       {% endif %}
       
+      {# --- 3. Gerenciamento de Jogadores (Sem Alteração) --- #}
       <div class="pt-4 border-t border-gray-700">
         <h3 class="text-xl text-rpg-gold font-semibold mb-3">
           Jogadores ({{ room.players.count }})
@@ -111,6 +164,9 @@
       {% if room.master == user %}
       <div class="mt-4 pt-4 border-t border-rpg-gold">
         <div class="bg-gray-900 p-6 rounded-xl space-y-4">
+          <h4 class="text-lg text-white font-semibold mb-3">
+             Adicionar Jogadores
+          </h4>
           <div
             class="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-2 border border-gray-700 rounded-lg"
           >
@@ -124,6 +180,7 @@
               }}
             </a>
             {% empty %}
+              <p class="text-gray-500">Todos os jogadores disponíveis já estão na sala.</p>
             {% endfor %}
           </div>
         </div>

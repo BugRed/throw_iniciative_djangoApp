@@ -56,6 +56,18 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
             models.Q(master=self.request.user) | 
             models.Q(players=self.request.user)
         ).distinct()
+    
+def player_has_character(self, user):
+        """
+        Verifica se um usuário (player) já tem um personagem (PJ) nesta sala.
+        Mestres não estão sujeitos a esta restrição aqui.
+        """
+        if user.user_type != 'player':
+            return False 
+            
+        # Filtra os personagens que pertencem a este usuário, estão nesta sala, 
+        # e são do tipo 'player' (PJ).
+        return self.characters.filter(owner=user, character_type='player').exists()
 
 # ==================== VIEWS BASEADAS EM FUNÇÃO (API - DRF) ====================
 
@@ -128,30 +140,37 @@ class RoomDetailTemplateView(LoginRequiredMixin, DetailView):
         room = self.get_object()
         user = self.request.user
         
-        # --- 1. Lógica de Gestão de Personagens (NOVA) ---
-        # Personagens atualmente na sala
+        # --- 1. Lógica de Gestão de Personagens ---
         context['current_characters'] = room.characters.all().select_related('owner')
 
-        if user.is_authenticated and user == room.master:
+        if user.is_authenticated:
+            # 🌟 NOVO: Variável de permissão de PJ para o usuário logado
+            context['can_add_player_character'] = (
+                user.user_type == 'player' and 
+                # Usa o método que definimos no rooms/models.py
+                not room.player_has_character(user) 
+            )
             
-            # Filtra personagens disponíveis para adição:
-            # - PJs (character_type='player') de qualquer dono.
-            # - NPCs e Monstros (character_type in ['npc', 'monster']) que SÃO do Mestre atual (owner=user).
-            # E EXCLUI personagens que JÁ estão nesta sala (rooms=room).
-            available_characters_qs = Character.objects.filter(
-                Q(character_type='player') | Q(owner=user, character_type__in=['npc', 'monster'])
-            ).exclude(
-                rooms=room
-            ).order_by('character_type', 'name')
-            
-            context['available_characters'] = available_characters_qs
+            # Personagens disponíveis (SÓ VISÍVEL PARA O MESTRE)
+            if user == room.master:
+                
+                # Filtra personagens disponíveis:
+                # 1. PJs (character_type='player') de qualquer dono 
+                #    QUE AINDA NÃO ESTÃO NA SALA.
+                # 2. NPCs e Monstros (character_type in ['npc', 'monster']) que SÃO do Mestre (owner=user).
+                
+                available_characters_qs = Character.objects.filter(
+                    Q(character_type='player') | Q(owner=user, character_type__in=['npc', 'monster'])
+                ).exclude(
+                    rooms=room
+                ).order_by('character_type', 'name')
+                
+                context['available_characters'] = available_characters_qs
             # --- Fim da Lógica de Gestão de Personagens ---
 
             # --- 2. Lógica de Gestão de Jogadores (EXISTENTE) ---
-            # Filtra apenas usuários do tipo 'player' que NÃO estão na sala (e não são o master)
             players_in_room_pks = room.players.values_list('pk', flat=True)
             
-            # Usuários disponíveis: 'players' que não estão na sala.
             context['all_users'] = User.objects.filter(user_type='player').exclude(
                 Q(pk=user.pk) | Q(pk__in=players_in_room_pks)
             ).order_by('username')
@@ -258,3 +277,49 @@ def add_character_to_room(request, room_pk, character_pk):
     messages.success(request, f"Personagem '{character.name}' adicionado à sala '{room.name}'.")
     
     return redirect('room-detail-template', pk=room_pk)
+
+
+@login_required
+def add_character_to_room(request, room_pk): 
+    """
+    Adiciona um personagem existente a uma sala (apenas para o Mestre da sala) via POST.
+    """
+    
+    if request.method != 'POST':
+        messages.error(request, "Ação inválida.")
+        return redirect('room_templates:room-detail-template', pk=room_pk)
+        
+    room = get_object_or_404(Room, pk=room_pk)
+    
+    character_pk = request.POST.get('character_pk')
+    if not character_pk:
+        messages.error(request, "Nenhum personagem foi selecionado para adicionar.")
+        return redirect('room_templates:room-detail-template', pk=room_pk)
+        
+    character = get_object_or_404(Character, pk=character_pk) 
+    
+    # 1. Checagem de Permissão
+    if room.master != request.user:
+        messages.error(request, "Você não tem permissão para gerenciar personagens nesta sala.")
+        return redirect('room_templates:room-detail-template', pk=room_pk)
+
+    # 2. Checagem de Elegibilidade (PJ de qualquer um, NPC/Monstro só do Mestre)
+    can_be_added = (
+        character.character_type == 'player' or 
+        (character.owner == request.user and character.character_type in ['npc', 'monster'])
+    )
+    
+    if not can_be_added:
+        messages.error(request, f"O personagem {character.name} não é elegível para ser adicionado.")
+        return redirect('room_templates:room-detail-template', pk=room_pk)
+        
+    # 3. VALIDAÇÃO DE 1 PJ POR SALA
+    if character.character_type == 'player' and room.player_has_character(character.owner):
+        messages.error(request, f"O Jogador {character.owner.username} já possui um Personagem Jogador (PJ) ativo nesta sala.")
+        return redirect('room_templates:room-detail-template', pk=room_pk)
+    
+    # 4. Adição
+    room.characters.add(character)
+    messages.success(request, f"Personagem '{character.name}' adicionado à sala '{room.name}'.")
+    
+    return redirect('room_templates:room-detail-template', pk=room_pk)
