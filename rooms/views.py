@@ -176,7 +176,9 @@ class RoomDeleteView(RoomMasterRequiredMixin, DeleteView):
     """Permite que o mestre da sala delete-a."""
     model = Room
     template_name = 'rooms/room_confirm_delete.html'
-    success_url = reverse_lazy('room-list-template')
+    
+    # ✅ CORREÇÃO AQUI: Deve ser 'room_templates:room-list-template'
+    success_url = reverse_lazy('room_templates:room-list-template')
 
 
 
