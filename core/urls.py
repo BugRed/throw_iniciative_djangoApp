@@ -1,3 +1,5 @@
+# core/urls.py
+
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
@@ -23,6 +25,7 @@ urlpatterns = [
     # TEMPLATES HTML (Frontend) - SEPARADO
     path('', include('accounts.urls_templates')), 
 
-    
     path('rooms/', include('rooms.urls_templates')),
+    # === ROTA ADICIONADA: Characters Templates ===
+    path('characters/', include('characters.urls_templates')), 
 ]

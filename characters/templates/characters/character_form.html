@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}Editar{% else %}Criar{% endif %} Personagem{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-8">
+    <div class="max-w-4xl mx-auto bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-rpg-gold">
+        
+        <h1 class="text-3xl font-bold text-rpg-gold font-medieval mb-6 border-b border-gray-700 pb-4">
+            {% if form.instance.pk %}Editar{% else %}Criar{% endif %} Personagem
+        </h1>
+        
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div class="p-4 bg-red-800 text-white rounded-lg">
+                    <p class="font-bold">Erro(s) no formulário:</p>
+                    <ul>
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>{{ field.label|default:field }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-400 font-semibold mb-1" for="{{ form.name.id_for_label }}">Nome</label>
+                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default:'' }}"
+                           required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold">
+                </div>
+                <div>
+                    <label class="block text-gray-400 font-semibold mb-1" for="{{ form.character_type.id_for_label }}">Tipo de Personagem</label>
+                    <select name="{{ form.character_type.name }}" id="{{ form.character_type.id_for_label }}"
+                            required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold">
+                        {% for value, label in form.character_type.field.choices %}
+                            <option value="{{ value }}" {% if form.character_type.value == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-400 font-semibold mb-1" for="{{ form.description.id_for_label }}">Descrição</label>
+                <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="3"
+                          class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold">{{ form.description.value|default:'' }}</textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-700">
+                <div>
+                    <label class="block text-gray-400 font-semibold mb-1" for="{{ form.image.id_for_label }}">Imagem (Opcional)</label>
+                    <input type="file" name="{{ form.image.name }}" id="{{ form.image.id_for_label }}" 
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold 
+                                  file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rpg-gold file:text-gray-900 hover:file:bg-yellow-600">
+                    {% if form.image.value and form.image.value.url %}<p class="text-xs text-gray-400 mt-1">Arquivo atual: <a href="{{ form.image.value.url }}" class="text-rpg-gold">Visualizar</a></p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-gray-400 font-semibold mb-1" for="{{ form.model_3d.id_for_label }}">Modelo 3D (Opcional)</label>
+                    <input type="file" name="{{ form.model_3d.name }}" id="{{ form.model_3d.id_for_label }}" 
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold
+                                  file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rpg-gold file:text-gray-900 hover:file:bg-yellow-600">
+                    {% if form.model_3d.value and form.model_3d.value.url %}<p class="text-xs text-gray-400 mt-1">Arquivo atual: <a href="{{ form.model_3d.value.url }}" class="text-rpg-gold">Visualizar</a></p>{% endif %}
+                </div>
+            </div>
+
+            <fieldset class="pt-4 border-t border-gray-700">
+                <legend class="text-xl text-rpg-gold font-semibold mb-4">Atributos D20</legend>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-gray-400 font-semibold mb-1" for="{{ form.strength.id_for_label }}">Força</label>
+                        <input type="number" name="{{ form.strength.name }}" id="{{ form.strength.id_for_label }}" value="{{ form.strength.value|default:10 }}"
+                               class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold"
+                               min="1" max="30">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-semibold mb-1" for="{{ form.dexterity.id_for_label }}">Destreza</label>
+                        <input type="number" name="{{ form.dexterity.name }}" id="{{ form.dexterity.id_for_label }}" value="{{ form.dexterity.value|default:10 }}"
+                               class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold"
+                               min="1" max="30">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-semibold mb-1" for="{{ form.constitution.id_for_label }}">Constituição</label>
+                        <input type="number" name="{{ form.constitution.name }}" id="{{ form.constitution.id_for_label }}" value="{{ form.constitution.value|default:10 }}"
+                               class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold"
+                               min="1" max="30">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-semibold mb-1" for="{{ form.intelligence.id_for_label }}">Inteligência</label>
+                        <input type="number" name="{{ form.intelligence.name }}" id="{{ form.intelligence.id_for_label }}" value="{{ form.intelligence.value|default:10 }}"
+                               class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold"
+                               min="1" max="30">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-semibold mb-1" for="{{ form.wisdom.id_for_label }}">Sabedoria</label>
+                        <input type="number" name="{{ form.wisdom.name }}" id="{{ form.wisdom.id_for_label }}" value="{{ form.wisdom.value|default:10 }}"
+                               class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold"
+                               min="1" max="30">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-semibold mb-1" for="{{ form.charisma.id_for_label }}">Carisma</label>
+                        <input type="number" name="{{ form.charisma.name }}" id="{{ form.charisma.id_for_label }}" value="{{ form.charisma.value|default:10 }}"
+                               class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold"
+                               min="1" max="30">
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="pt-4 border-t border-gray-700">
+                <legend class="text-xl text-rpg-gold font-semibold mb-4">Combate</legend>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 font-semibold mb-1" for="{{ form.hit_points.id_for_label }}">Pontos de Vida</label>
+                        <input type="number" name="{{ form.hit_points.name }}" id="{{ form.hit_points.id_for_label }}" value="{{ form.hit_points.value|default:1 }}"
+                               class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold"
+                               min="1">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 font-semibold mb-1" for="{{ form.speed.id_for_label }}">Velocidade</label>
+                        <input type="number" name="{{ form.speed.name }}" id="{{ form.speed.id_for_label }}" value="{{ form.speed.value|default:30 }}"
+                               class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-rpg-gold"
+                               min="1">
+                    </div>
+                    
+                    <div class="col-span-2 text-sm text-gray-500">
+                        * A Classe de Armadura (CA) é calculada automaticamente.
+                    </div>
+                </div>
+            </fieldset>
+            
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-700">
+                <a href="{% url 'character-list-template' %}" 
+                   class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="px-6 py-3 bg-rpg-green text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                    {% if form.instance.pk %}Salvar Alterações{% else %}Criar Personagem{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
