@@ -189,7 +189,6 @@ def toggle_player_in_room(request, room_pk, user_pk):
     """
     Permite ao Mestre da Sala adicionar ou remover um Jogador (usuário).
     """
-    # ... (Sua lógica existente para toggle_player_in_room permanece inalterada)
     room = get_object_or_404(Room, pk=room_pk)
     target_user = get_object_or_404(User, pk=user_pk)
 
@@ -197,17 +196,20 @@ def toggle_player_in_room(request, room_pk, user_pk):
     # Apenas o mestre da sala E do tipo 'master' pode gerenciar.
     if request.user != room.master or request.user.user_type != 'master':
         messages.error(request, "Apenas o Mestre desta sala pode gerenciar jogadores.")
-        return redirect('room-detail-template', pk=room_pk)
+        # CORRIGIDO: Adicionado o namespace
+        return redirect('room_templates:room-detail-template', pk=room_pk) 
 
     # 2. Impedir que o Mestre seja adicionado como Jogador
     if target_user == room.master:
         messages.warning(request, "O Mestre não pode ser adicionado/removido como Jogador por esta interface.")
-        return redirect('room-detail-template', pk=room_pk)
+        # CORRIGIDO: Adicionado o namespace
+        return redirect('room_templates:room-detail-template', pk=room_pk)
     
     # 3. Impedir que outros Mestres sejam adicionados como Jogadores
     if target_user.user_type == 'master':
         messages.warning(request, f"O usuário {target_user.username} é um Mestre e não pode ser adicionado como Jogador nesta sala.")
-        return redirect('room-detail-template', pk=room_pk)
+        # CORRIGIDO: Adicionado o namespace
+        return redirect('room_templates:room-detail-template', pk=room_pk)
 
 
     # 4. Lógica de Toggle
@@ -220,7 +222,8 @@ def toggle_player_in_room(request, room_pk, user_pk):
         room.players.add(target_user)
         messages.success(request, f"O Jogador {target_user.username} foi adicionado à sala com sucesso.")
 
-    return redirect('room-detail-template', pk=room_pk)
+    # CORRIGIDO: Adicionado o namespace
+    return redirect('room_templates:room-detail-template', pk=room_pk)
 
 
 @login_required
