@@ -7,10 +7,17 @@
         <h1 class="text-4xl font-bold text-rpg-gold font-medieval">
             Gerenciamento de Salas
         </h1>
-        <a href="{% url 'room-create-template' %}" 
-           class="px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors">
-            <i class="fas fa-plus-circle mr-2"></i>Criar Nova Sala
-        </a>
+        <div class="flex space-x-3">
+            <a href="{% url 'dashboard' %}" 
+               class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Voltar
+            </a>
+            
+            <a href="{% url 'room-create-template' %}" 
+               class="px-4 py-2 bg-rpg-green text-white rounded-lg hover:bg-green-700 transition-colors">
+                <i class="fas fa-plus-circle mr-2"></i>Criar Nova Sala
+            </a>
+        </div>
     </div>
 
     {% if rooms %}

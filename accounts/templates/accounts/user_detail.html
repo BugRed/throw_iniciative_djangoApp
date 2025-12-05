@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Perfil: {{ target_user.username }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-8">
+    <div class="max-w-xl mx-auto">
+        
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+            <h1 class="text-4xl font-bold text-rpg-gold font-medieval">
+                Perfil: {{ target_user.username }}
+            </h1>
+            <div class="flex space-x-3">
+                {% if user.user_type == 'master' %}
+                    <a href="{% url 'user-update' pk=target_user.pk %}" 
+                       class="px-4 py-2 bg-yellow-600 text-gray-900 rounded-lg hover:bg-yellow-700 transition-colors">
+                        <i class="fas fa-edit mr-2"></i>Editar (Admin)
+                    </a>
+                    <a href="{% url 'user-delete' pk=target_user.pk %}" 
+                       class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="fas fa-trash-alt mr-2"></i>Excluir (Admin)
+                    </a>
+                {% endif %}
+                <a href="{% url 'user-list' %}" 
+                   class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Voltar
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-rpg-gold space-y-6">
+            
+            <div class="grid grid-cols-2 gap-4 border-b border-gray-700 pb-4">
+                <div>
+                    <p class="text-gray-400 font-semibold">Email</p>
+                    <p class="text-white text-lg">{{ target_user.email|default:"N/A" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 font-semibold">Tipo de Conta</p>
+                    <p class="text-white text-lg">
+                        {% if target_user.user_type == 'master' %}
+                            <span class="text-rpg-purple font-semibold">Mestre</span>
+                        {% else %}
+                            <span class="text-rpg-green font-semibold">Jogador</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-gray-400 font-semibold">Data de Cadastro</p>
+                    <p class="text-white text-lg">{{ target_user.date_joined|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 font-semibold">Status</p>
+                    <p class="text-lg">
+                        {% if target_user.is_active %}
+                            <span class="text-rpg-green">Ativo</span>
+                        {% else %}
+                            <span class="text-red-500">Inativo</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-4">
+                <h3 class="text-xl text-rpg-gold font-semibold">Biografia</h3>
+                <p class="text-gray-300 p-4 bg-gray-900 rounded-lg whitespace-pre-wrap">
+                    {{ target_user.bio|default:"Nenhuma biografia fornecida." }}
+                </p>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

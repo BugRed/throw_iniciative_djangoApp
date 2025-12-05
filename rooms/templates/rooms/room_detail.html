@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Detalhes da Sala: {{ room.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+            <h1 class="text-4xl font-bold text-rpg-gold font-medieval">
+                {{ room.name }}
+            </h1>
+            <div class="flex space-x-3">
+                {% if room.master == user %}
+                    <a href="{% url 'room-update-template' pk=room.pk %}" 
+                       class="px-4 py-2 bg-yellow-600 text-gray-900 rounded-lg hover:bg-yellow-700 transition-colors">
+                        <i class="fas fa-edit mr-2"></i>Editar
+                    </a>
+                    <a href="{% url 'room-delete-template' pk=room.pk %}" 
+                       class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="fas fa-trash-alt mr-2"></i>Excluir
+                    </a>
+                {% endif %}
+                <a href="{% url 'room-list-template' %}" 
+                   class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Voltar para a Lista
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-rpg-gold space-y-6">
+            
+            <div class="grid grid-cols-2 gap-4 border-b border-gray-700 pb-4">
+                <div>
+                    <p class="text-gray-400 font-semibold">Mestre da Sala</p>
+                    <p class="text-white text-xl">
+                        {% if room.master == user %}
+                            <i class="fas fa-crown text-rpg-gold mr-1"></i> Você
+                        {% else %}
+                            {{ room.master.username }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-gray-400 font-semibold">Status / Código</p>
+                    <p class="text-white text-xl font-mono">
+                        Código: <span class="text-rpg-green">{{ room.code }}</span>
+                    </p>
+                    <p class="text-sm">
+                        Status: 
+                        {% if room.is_active %}
+                            <span class="text-rpg-green">Ativa</span>
+                        {% else %}
+                            <span class="text-red-500">Inativa</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-xl text-rpg-gold font-semibold">Descrição</h3>
+                <p class="text-gray-300 p-4 bg-gray-900 rounded-lg">{{ room.description|default:"Nenhuma descrição fornecida." }}</p>
+
+                <h3 class="text-xl text-rpg-gold font-semibold">História / Lore</h3>
+                <div class="text-gray-300 p-4 bg-gray-900 rounded-lg whitespace-pre-wrap">
+                    {{ room.story|default:"Nenhuma história/lore definida." }}
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-700">
+                <h3 class="text-xl text-rpg-gold font-semibold mb-3">Jogadores ({{ room.players.count }})</h3>
+                <ul class="list-disc list-inside space-y-1">
+                    {% for player in room.players.all %}
+                        <li class="text-gray-300 hover:text-white">
+                            {{ player.username }} 
+                            {% if player == user %}<span class="text-rpg-green">(Você)</span>{% endif %}
+                        </li>
+                    {% empty %}
+                        <li class="text-gray-500">Nenhum jogador ainda nesta sala.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="pt-4 border-t border-gray-700">
+                <h3 class="text-xl text-rpg-gold font-semibold mb-3">Estado da Iniciativa</h3>
+                <p class="text-gray-300">Rodada Atual: <span class="text-white font-semibold">{{ room.current_initiative_round }}</span></p>
+                <p class="text-gray-300">Turno Atual (Índice): <span class="text-white font-semibold">{{ room.current_turn_index }}</span></p>
+                <p class="text-gray-300">Iniciativa Iniciada: 
+                    <span class="font-semibold {% if room.initiative_started %}text-rpg-green{% else %}text-red-500{% endif %}">
+                        {% if room.initiative_started %}Sim{% else %}Não{% endif %}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
