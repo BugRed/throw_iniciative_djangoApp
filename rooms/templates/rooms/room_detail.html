@@ -68,18 +68,67 @@
 
             <div class="pt-4 border-t border-gray-700">
                 <h3 class="text-xl text-rpg-gold font-semibold mb-3">Jogadores ({{ room.players.count }})</h3>
-                <ul class="list-disc list-inside space-y-1">
-                    {% for player in room.players.all %}
-                        <li class="text-gray-300 hover:text-white">
-                            {{ player.username }} 
-                            {% if player == user %}<span class="text-rpg-green">(Você)</span>{% endif %}
-                        </li>
-                    {% empty %}
-                        <li class="text-gray-500">Nenhum jogador ainda nesta sala.</li>
-                    {% endfor %}
-                </ul>
+                
+                {% if room.master == user %}
+                    <div class="flex flex-wrap gap-3">
+                        {% for player in room.players.all %}
+                        <div class="bg-rpg-green text-gray-900 font-semibold px-3 py-1 rounded-full flex items-center">
+                            {{ player.username }}
+                            {% if player != user %} 
+                            <a href="{% url 'toggle-player-in-room' room_pk=room.pk user_pk=player.pk %}" 
+                               class="ml-2 text-red-800 hover:text-red-600 transition-colors"
+                               title="Remover {{ player.username }}">
+                                <i class="fas fa-times-circle text-lg"></i>
+                            </a>
+                            {% else %}
+                            <span class="ml-2 text-rpg-red">(Você)</span>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <p class="text-gray-500">Nenhum jogador na sala.</p>
+                        {% endfor %}
+                    </div>
+                
+                {% else %}
+                    <ul class="list-disc list-inside space-y-1">
+                        {% for player in room.players.all %}
+                            <li class="text-gray-300 hover:text-white">
+                                {{ player.username }} 
+                                {% if player == user %}<span class="text-rpg-green">(Você)</span>{% endif %}
+                            </li>
+                        {% empty %}
+                            <li class="text-gray-500">Nenhum jogador ainda nesta sala.</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
             
+            {% if room.master == user %}
+            <div class="mt-4 pt-4 border-t border-rpg-gold">
+                <h3 class="text-2xl text-rpg-gold font-medieval font-semibold mb-4">
+                    Adicionar Jogadores à Sala
+                </h3>
+                
+                <div class="bg-gray-900 p-6 rounded-xl space-y-4">
+                    <h4 class="text-xl text-white font-semibold mb-3">
+                        Jogadores Disponíveis
+                    </h4>
+                    <div class="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-2 border border-gray-700 rounded-lg">
+                        
+                        {% for possible_player in all_users %}
+                            <a href="{% url 'toggle-player-in-room' room_pk=room.pk user_pk=possible_player.pk %}"
+                               class="bg-blue-600 text-white px-3 py-1 text-sm rounded-full hover:bg-blue-700 transition-colors flex items-center"
+                               title="Adicionar {{ possible_player.username }}">
+                                <i class="fas fa-user-plus mr-1"></i> {{ possible_player.username }}
+                            </a>
+                        {% empty %}
+                            <p class="text-gray-500">Não há outros usuários do tipo 'Jogador' disponíveis para adicionar.</p>
+                        {% endfor %}
+                    </div>
+                    
+                </div>
+            </div>
+            {% endif %}
             <div class="pt-4 border-t border-gray-700">
                 <h3 class="text-xl text-rpg-gold font-semibold mb-3">Estado da Iniciativa</h3>
                 <p class="text-gray-300">Rodada Atual: <span class="text-white font-semibold">{{ room.current_initiative_round }}</span></p>

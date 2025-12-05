@@ -4,10 +4,11 @@ from django.urls import path
 from .views import (
     RoomListView, 
     RoomCreateView, 
-    RoomDetailTemplateView, # Nome de View atualizado para Template
+    RoomDetailTemplateView,
     RoomUpdateView, 
     RoomDeleteView
 ) 
+from . import views
 
 urlpatterns = [
     # Listagem (URL que o dashboard chama)
@@ -18,4 +19,7 @@ urlpatterns = [
     path('<int:pk>/', RoomDetailTemplateView.as_view(), name='room-detail-template'),
     path('<int:pk>/edit/', RoomUpdateView.as_view(), name='room-update-template'),
     path('<int:pk>/delete/', RoomDeleteView.as_view(), name='room-delete-template'),
+    path('<int:room_pk>/toggle-player/<int:user_pk>/', 
+         views.toggle_player_in_room, 
+         name='toggle-player-in-room'),
 ]

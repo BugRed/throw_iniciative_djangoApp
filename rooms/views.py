@@ -7,6 +7,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .serializers import RoomSerializer, RoomCreateSerializer
 
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
+User = get_user_model() 
+from django.db.models import Q
+
 # Importações para Templates (Django CBV)
 from django.views.generic import (
     ListView, CreateView, UpdateView, DeleteView, DetailView
@@ -106,12 +113,32 @@ class RoomCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('room-list-template')
 
-# 3. DETALHES DA SALA (Template: room-detail-template)
+# 3. DETALHES DA SALA (Template: room-detail-template) - CORRIGIDA
 class RoomDetailTemplateView(LoginRequiredMixin, DetailView):
     """Exibe os detalhes de uma sala (view de Template)."""
     model = Room
     template_name = 'rooms/room_detail.html'
     context_object_name = 'room'
+    
+    # Adicionar o método get_context_data para passar a lista de usuários
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        room = self.get_object()
+        user = self.request.user
+        
+        # Apenas adicione a lista de usuários se o usuário logado for o mestre
+        if user.is_authenticated and user == room.master:
+            # Filtra apenas usuários do tipo 'player' que NÃO estão na sala (e não são o master)
+            players_in_room_pks = room.players.values_list('pk', flat=True)
+            
+            # Usuários disponíveis: 'players' que não estão na sala.
+            context['all_users'] = User.objects.filter(user_type='player').exclude(
+                Q(pk=user.pk) | Q(pk__in=players_in_room_pks)
+            ).order_by('username')
+            
+        return context
+
+    
 
 # 4. ATUALIZAÇÃO DE SALA (Template: room-update-template)
 class RoomUpdateView(RoomMasterRequiredMixin, UpdateView):
@@ -129,3 +156,44 @@ class RoomDeleteView(RoomMasterRequiredMixin, DeleteView):
     model = Room
     template_name = 'rooms/room_confirm_delete.html'
     success_url = reverse_lazy('room-list-template')
+
+
+
+# ==================== VIEWS BASEADAS EM FUNÇÃO (Gestão) ====================
+
+@login_required
+def toggle_player_in_room(request, room_pk, user_pk):
+    """
+    Permite ao Mestre da Sala adicionar ou remover um Jogador.
+    """
+    room = get_object_or_404(Room, pk=room_pk)
+    target_user = get_object_or_404(User, pk=user_pk)
+
+    # 1. Checagem de Autorização
+    # Apenas o mestre da sala E do tipo 'master' pode gerenciar.
+    if request.user != room.master or request.user.user_type != 'master':
+        messages.error(request, "Apenas o Mestre desta sala pode gerenciar jogadores.")
+        return redirect('room-detail-template', pk=room_pk)
+
+    # 2. Impedir que o Mestre seja adicionado como Jogador
+    if target_user == room.master:
+        messages.warning(request, "O Mestre não pode ser adicionado/removido como Jogador por esta interface.")
+        return redirect('room-detail-template', pk=room_pk)
+    
+    # 3. Impedir que outros Mestres sejam adicionados como Jogadores
+    if target_user.user_type == 'master':
+        messages.warning(request, f"O usuário {target_user.username} é um Mestre e não pode ser adicionado como Jogador nesta sala.")
+        return redirect('room-detail-template', pk=room_pk)
+
+
+    # 4. Lógica de Toggle
+    if room.players.filter(pk=target_user.pk).exists():
+        # Remover Jogador
+        room.players.remove(target_user)
+        messages.success(request, f"O Jogador {target_user.username} foi removido da sala.")
+    else:
+        # Adicionar Jogador
+        room.players.add(target_user)
+        messages.success(request, f"O Jogador {target_user.username} foi adicionado à sala com sucesso.")
+
+    return redirect('room-detail-template', pk=room_pk)
